@@ -8,5 +8,7 @@ celery_app = Celery(
     backend=os.getenv("REDIS_URL", "redis://redis:6379/0"),
 )
 
-@celery_app.taskdef ping():
+
+@celery_app.task
+def ping():
     return "pong"
