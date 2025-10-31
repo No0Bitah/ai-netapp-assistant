@@ -16,7 +16,7 @@ ENV/
 *.swo
 
 # Environment variables
-.env.backend
+
 
 # OS
 .DS_Store
