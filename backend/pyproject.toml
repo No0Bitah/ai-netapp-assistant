@@ -11,12 +11,13 @@ dependencies = [
 "alembic~=1.13",
 "psycopg2-binary~=2.9",
 "python-multipart~=0.0.9",
-"passlib[bcrypt]~=1.7",
 "pyjwt~=2.8",
 "cryptography~=43.0",
 "celery~=5.4",
 "redis~=5.0",
 "structlog~=24.1",
+"pydantic[email]",
+"passlib[argon2]",
 # NetApp SDK (optional for now; add later when you connect)
 # "netapp-ontap~=9.13"
 ]
