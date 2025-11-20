@@ -14,3 +14,12 @@ class UserOut(BaseModel):
     class Config:
         from_attributes = True  # Pydantic v2: read from ORM objects
 
+class LoginPayload(BaseModel):
+    email: EmailStr
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    role: str
+

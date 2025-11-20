@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from app.api import auth
+from dotenv import load_dotenv
+load_dotenv()
+
 
 app = FastAPI(title="AI NetApp Assistant API")
 
