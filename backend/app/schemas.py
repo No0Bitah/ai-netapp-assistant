@@ -23,3 +23,8 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     role: str
 
+class SVMCreateRequest(BaseModel):
+    connection_id: int
+    name: str
+    snapshot_policy: str = "default"
+
