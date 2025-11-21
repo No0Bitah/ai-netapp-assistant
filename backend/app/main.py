@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
-from app.api import auth
+from app.api import auth, orgs
 from app.netapp import svm
 from dotenv import load_dotenv
 load_dotenv()
@@ -25,4 +25,5 @@ def health():
     return {"status": "ok"}
 
 app.include_router(auth.router)
+app.include_router(orgs.router)
 app.include_router(svm.router)
