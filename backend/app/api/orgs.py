@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db import get_db
-from app.schemas import OrgCreate, OrgOut, OrgAddMember
+from app.schemas import OrgCreate, OrgOut, OrgAddMember, OrgMemberOut
 from app.models.models import Organization, UserOrg, User
 from app.api.auth_dep import require_role
 from app.api.orgs_dep import create_organization
@@ -21,11 +21,10 @@ def create_org(
 def list_org(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["viewer", "admin"]))
-):
+):  
+    # query the DB list all the organizations
     orgs = db.query(Organization).all()
 
-    for org in orgs:
-        print(org.id, org.name, org.created_at)
     return orgs
 
 
@@ -66,3 +65,24 @@ def add_member_org(
 
     return {}
 
+@router.get("{org_name}/members", response_model=list[OrgMemberOut])
+def list_organization_members(
+    org_name: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["viewer", "admin"]))
+):
+    members_ = []
+    # 1 - Using organization name get the organization Id
+    org = db.query(Organization).filter(Organization.name == org_name).first()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization Not Found!")
+    # 2 - using organization Id query the DB
+    organization_members = db.query(UserOrg).filter(UserOrg.org_id == org.id).all()
+
+    # 3 - using the members id get their email 
+    for member_id in organization_members:
+        member = db.query(User).filter(User.id == member_id.user_id).first()
+        members_.append({"user_id":member.id, "user_name":member.email})
+
+
+    return members_
