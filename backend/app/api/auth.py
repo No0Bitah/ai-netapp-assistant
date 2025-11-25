@@ -54,6 +54,6 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
     # 4) return token response
     return {"access_token":access_token, "role":user.role}
 
-@router.get("/me", response_model=UserOut)
-def me(current_user: User = Depends(auth_dep.require_role(["admin"]))):
-    return current_user
+@router.get("/me")
+def me(current_user: User = Depends(auth_dep.require_role(["viewer"]))):
+    return current_user.id

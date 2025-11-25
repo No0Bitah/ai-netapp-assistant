@@ -45,6 +45,10 @@ class OrgOut(BaseModel):
     class Config:
         from_attributes = True  # Pydantic v2: read from ORM objects
 
+class OrgAddMember(BaseModel):
+    user_email: EmailStr
+
+
 class ConnectionCreate(BaseModel):
     svm_name: str = Field(
         ...,
