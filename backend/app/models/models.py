@@ -7,6 +7,7 @@ class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    username: Mapped[str] = mapped_column(String(255), nullable=False)
     pwd_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(32), default="viewer", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -29,7 +30,6 @@ class Connection(Base):
     org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     base_url: Mapped[str] = mapped_column(String(255), nullable=False)
-    username: Mapped[str] = mapped_column(String(255), nullable=False)
     enc_password: Mapped[str] = mapped_column(Text, nullable=False)  # Fernet-encrypted
     scope: Mapped[str] = mapped_column(String(16), nullable=False)   # 'cluster' | 'svm'
     svm_name: Mapped[str | None] = mapped_column(String(255))

@@ -6,6 +6,12 @@ from datetime import datetime
 
 class UserCreate(BaseModel):
     email: EmailStr
+    username: str = Field(
+        ...,
+        min_length=3,
+        max_length=25,
+        description="Service account username for the storage system"
+    )
     password: str = Field(
         ..., 
         min_length=8, 
@@ -15,6 +21,7 @@ class UserCreate(BaseModel):
 class UserOut(BaseModel):
     id: int
     email: EmailStr
+    username: str
     role: str
     is_active: bool
 
@@ -62,12 +69,6 @@ class ConnectionCreate(BaseModel):
         ...,
         description="The management endpoint",
         examples=["https//:127.0.0.1"]
-    )
-    username: str = Field(
-        ...,
-        min_length=3,
-        max_length=25,
-        description="Service account username for the storage system"
     )
     password: str = Field(
         ...,
