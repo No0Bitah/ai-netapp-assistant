@@ -56,7 +56,9 @@ class OrgAddMember(BaseModel):
     user_email: EmailStr
 
 class OrgMemberOut(BaseModel):
-    user_name: str
+    id: int
+    email: str
+    name: str
 
 class ConnectionCreate(BaseModel):
     svm_name: str = Field(

@@ -63,7 +63,7 @@ def add_member_org(
     db.add(link_new_member)
     db.commit()
 
-    return {}
+    return {f"{user.username} Added to {org.name} organization Successfully!"}
 
 @router.get("{org_name}/members", response_model=list[OrgMemberOut])
 def list_organization_members(
@@ -82,7 +82,13 @@ def list_organization_members(
     # 3 - using the members id get their email 
     for member_id in organization_members:
         member = db.query(User).filter(User.id == member_id.user_id).first()
-        members_.append({"user_id":member.id, "user_name":member.email})
+        members_.append(
+            {
+                "id":member.id,
+                "email":member.email, 
+                "name":member.username
+                }
+                )
 
 
     return members_
