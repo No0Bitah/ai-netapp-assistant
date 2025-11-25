@@ -17,6 +17,18 @@ def create_org(
 ):
     return create_organization(org_data=org_data, db=db, user=current_user.id)
 
+@router.get("/organizations", response_model=list[OrgOut])
+def list_org(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["viewer", "admin"]))
+):
+    orgs = db.query(Organization).all()
+
+    for org in orgs:
+        print(org.id, org.name, org.created_at)
+    return orgs
+
+
 @router.post("/{org_name}/member")
 def add_member_org(
     org_name: str,
