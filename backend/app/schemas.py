@@ -16,7 +16,7 @@ class UserCreate(BaseModel):
         ..., 
         min_length=8, 
         max_length=72)
-    role: str = "viewer"  # optional, defaults to viewer
+    role: str = "admin"  # optional, defaults to viewer
 
 class UserOut(BaseModel):
     id: int

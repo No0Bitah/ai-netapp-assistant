@@ -22,7 +22,13 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     pwd_hash = hash_password(payload.password)
 
     # 3) create user
-    user = User(email=payload.email, pwd_hash=pwd_hash, role=payload.role)
+    user = User(
+        email=payload.email, 
+        username=payload.username, 
+        pwd_hash=pwd_hash, 
+        role=payload.role
+        )
+    
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -33,7 +39,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginPayload, db: Session = Depends(get_db)):
     # 1) find user by email
-    user = db.query(User).filter(User.email == payload.email and User.is_active == True).first()
+    user = db.query(User).filter(User.email == payload.email, User.is_active == True).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
