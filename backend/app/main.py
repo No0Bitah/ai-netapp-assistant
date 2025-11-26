@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
-from app.api import auth, orgs
+from app.api import auth, orgs, connection
 from app.netapp import svm
 from dotenv import load_dotenv
 load_dotenv()
@@ -26,4 +26,5 @@ def health():
 
 app.include_router(auth.router)
 app.include_router(orgs.router)
+app.include_router(connection.router)
 app.include_router(svm.router)

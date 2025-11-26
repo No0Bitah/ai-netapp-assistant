@@ -22,7 +22,7 @@ def create_organization(db: Session, org_data: OrgCreate, user: int):
 
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, details="Organization with this name already exists.")
+        raise HTTPException(status_code=400, detail="Organization with this name already exists.")
     
     # 2. AUTOMATICALLY Link the Creator (Vital Step)
     # Since you have a UserOrg table, you shouldn't create an orphaned organization.

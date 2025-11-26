@@ -61,16 +61,26 @@ class OrgMemberOut(BaseModel):
     name: str
 
 class ConnectionCreate(BaseModel):
-    svm_name: str = Field(
+    conn_name: str = Field(
         ...,
         min_length=3,
         max_length=35,
         description="The name of the Connection"
     )
+    svm_name: str = Field(
+        ...,
+        min_length=3,
+        max_length=35,
+        description="The name of the SVM"
+    )
     base_url: str = Field(
         ...,
         description="The management endpoint",
         examples=["https//:127.0.0.1"]
+    )
+    organization: str = Field(
+        ...,
+        description="Name of the organization"
     )
     password: str = Field(
         ...,
@@ -95,9 +105,8 @@ class ConnectionCreate(BaseModel):
                     "support"] = Field(
         default="admin",
         description="Permission"
-
-
     )
+    verify_tls: bool = Field(default=True, description="...")
 
 class SVMCreateRequest(BaseModel):
     connection_id: int
