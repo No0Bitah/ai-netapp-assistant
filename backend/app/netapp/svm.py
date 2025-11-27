@@ -5,7 +5,7 @@ from app.models.models import Connection
 from app.api.auth_dep import require_role
 from app.api.connection_dep import get_auth_connection
 from app.schemas import SVMCreateRequest, SvmConnect
-from backend.app.utility.netapp_client import create, list
+from app.utility.netapp_client import create, list
 
 
 router = APIRouter(prefix="/svm", tags=["SVM"])

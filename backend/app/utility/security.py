@@ -8,8 +8,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev_insecure_change_me")
 ALGORITHM = os.getenv("JWT_ALGO", "HS256")
 ACCESS_TOKEN_EXP = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 86400))
 
-enc_key = os.getenv("FERNET_KEY", Fernet.generate_key().decode())
-cipher_suite = Fernet(enc_key)
+
+ENCRYPTION_KEY = os.getenv("FERNET_KEY", Fernet.generate_key().decode())
+cipher_suite = Fernet(ENCRYPTION_KEY)
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
