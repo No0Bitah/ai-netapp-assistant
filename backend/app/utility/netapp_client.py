@@ -1,5 +1,5 @@
 import httpx
-from sqalchemy.orm import Session
+from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models.models import Connection
 from app.utility.security import decode_token

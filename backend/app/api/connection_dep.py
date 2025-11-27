@@ -25,6 +25,7 @@ def create(conn_data: ConnectionCreate, db: Session, user: int):
         org_id = org.id,
         name = conn_data.conn_name,
         base_url = conn_data.base_url,
+        username = conn_data.username,
         enc_password = enc_netapp_password(conn_data.password),
         scope = conn_data.scope,
         svm_name = conn_data.svm_name
