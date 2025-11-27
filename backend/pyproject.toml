@@ -19,8 +19,11 @@ dependencies = [
 "pydantic[email]",
 "passlib[argon2]",
 "python-dotenv",
+"httpx~=1.2",
+"cryptography~=43.0",
+
 # NetApp SDK (optional for now; add later when you connect)
-# "netapp-ontap~=9.13"
+"netapp-ontap~=9.13"
 ]
 
 

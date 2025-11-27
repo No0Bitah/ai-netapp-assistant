@@ -1,10 +1,12 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException
+from fastapi import HTTPException, Path, Depends
 from app.db import get_db
 from app.models.models import User, UserOrg, Organization, Connection
 from app.schemas import ConnectionCreate
-from app.utility.security import hash_password
+from app.utility.security import hash_password, enc_netapp_password
+from app.api.auth_dep import require_role
+
 
 def create(conn_data: ConnectionCreate, db: Session, user: int):
     
@@ -23,7 +25,7 @@ def create(conn_data: ConnectionCreate, db: Session, user: int):
         org_id = org.id,
         name = conn_data.conn_name,
         base_url = conn_data.base_url,
-        enc_password = hash_password(conn_data.password),
+        enc_password = enc_netapp_password(conn_data.password),
         scope = conn_data.scope,
         svm_name = conn_data.svm_name
     )
@@ -45,3 +47,40 @@ def verify_member(db: Session, user_id: int, org_id: int) -> bool:
         UserOrg.org_id == org_id
         ).first())
     
+def verify_connection(conn_id: int, user_id: int, db: Session) -> Connection:
+    # Combine the lookup and the membership check 
+    # into a single query using a JOIN. This is faster and atomic.
+    # "Select Connection WHERE id is X AND UserOrg exists for this user/org"
+
+    connection =(
+            db.query(Connection).join(UserOrg, UserOrg.org_id == Connection.org_id)
+                .filter(Connection.id == conn_id)
+                .filter(UserOrg.user_id == user_id)
+                .first()
+        )
+    return connection
+
+
+def get_auth_connection(
+        conn_id: int = Path(..., description="The ID of the Connection"),
+        current_user: User = Depends(require_role(["admin"])),
+        db: Session = Depends(get_db)
+) -> Connection:
+    """
+    Dependency that acts as a security gate.
+    It resolves the Connection ID to an actual Connection object,
+    BUT only if the user has rights to access it.
+    """
+
+    # 1 check the user if its a member of the org and the user 
+    # is the owner is authorized to use the connection
+    connection = verify_connection(conn_id=conn_id,
+                                   user_id=current_user.id,
+                                   db=db)
+    
+    # If no result, it either doesn't exist OR they don't have access.
+    # We return 404 for both to prevent enumeration scanning.
+    if not connection:
+        raise HTTPException(status_code=404, detail="Connection not found")
+    
+    return connection

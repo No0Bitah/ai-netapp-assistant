@@ -2,12 +2,14 @@ import os
 from passlib.context import CryptContext
 import time
 import jwt
-from fastapi import HTTPException, status
-
+from cryptography.fernet import Fernet
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev_insecure_change_me")
 ALGORITHM = os.getenv("JWT_ALGO", "HS256")
 ACCESS_TOKEN_EXP = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 86400))
+
+enc_key = os.getenv("FERNET_KEY", Fernet.generate_key().decode())
+cipher_suite = Fernet(enc_key)
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
@@ -16,6 +18,22 @@ def hash_password(plain: str) -> str:
 
 def verify_password(passwd: str, pwd_hash: str) -> bool:
     return pwd_context.verify(passwd, pwd_hash)
+
+def enc_netapp_password(password: str) -> str:
+    if not password:
+        return ""
+    encryoted_bytes = cipher_suite.encrypt(password.encode("utf-8"))
+    return encryoted_bytes.decode("utf-8")
+
+def decrypt_netapp_password(enc_pass: str) -> str:
+    if not enc_pass:
+        return ""
+    
+    try:
+        decrypt_pass = cipher_suite.decrypt(enc_pass.encode("utf-8"))
+        return decrypt_pass.decode("utf-8")
+    except Exception:
+        raise ValueError("Could not decrypt password. Invalid Key?")
 
 def create_token(data: dict):
     to_encode = data.copy()
