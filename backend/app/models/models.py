@@ -29,6 +29,7 @@ class Connection(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    username: Mapped[str] = mapped_column(String(255), nullable=False)
     base_url: Mapped[str] = mapped_column(String(255), nullable=False)
     enc_password: Mapped[str] = mapped_column(Text, nullable=False)  # Fernet-encrypted
     scope: Mapped[str] = mapped_column(String(16), nullable=False)   # 'cluster' | 'svm'

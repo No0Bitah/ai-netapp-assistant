@@ -82,6 +82,12 @@ class ConnectionCreate(BaseModel):
         ...,
         description="Name of the organization"
     )
+    username: str = Field(
+        ...,
+        min_length=3,
+        max_length=25,
+        description="Service account username for the storage system"
+    )
     password: str = Field(
         ...,
         min_length=8,
