@@ -28,7 +28,9 @@ def create(conn_data: ConnectionCreate, db: Session, user: int):
         username = conn_data.username,
         enc_password = enc_netapp_password(conn_data.password),
         scope = conn_data.scope,
-        svm_name = conn_data.svm_name
+        svm_name = conn_data.svm_name,
+        verify_tls = conn_data.verify_tls
+
     )
 
     try:

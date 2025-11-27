@@ -117,12 +117,15 @@ class ConnectionCreate(BaseModel):
 class SVMCreateRequest(BaseModel):
     connection_id: int
     name: str
+    svm_name: str
+    snapshot_policy: str = "default"
+    
     snapshot_policy: str = "default"
 
 class SvmConnect(BaseModel):
     connection_id: int
     connection_name: str
-    svm_name: str
+    username: str
     base_url: str
     password: str
 
