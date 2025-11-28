@@ -48,6 +48,7 @@ async def get_netapp_client(conn_id: int, db: Session):
         }
     ) as client:
         # 4. Yield the client to the route handler
+        
         yield client
 
 

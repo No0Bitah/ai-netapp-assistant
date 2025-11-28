@@ -26,18 +26,38 @@ async def get_svms(
     
 
     async with get_netapp_client(safe_connection.id, db=db) as conn:
-        response = await conn.get("/api/svm/svms", params=filters.to_dict())
+        try:
+            query_params = filters.to_dict()
+            query_params["fields"] = "*"  # Fetch all fields
+            response = await conn.get("/api/svm/svms", params=query_params)
+            if response.status_code != 200:
+                try:
+                    error_detail = response.json().get('error', {}).get('message', 'Unknown error') 
+                except Exception:
+                    error_detail = response.text or f"HTTP {response.status_code}"
+                
+                print("ONTAP Error Response:", response.json())
+                raise HTTPException(
+                    status_code=response.status_code, 
+                    detail=f"ONTAP Error: {error_detail}"
+                )
 
-    if response.status_code != 200:
-        raise HTTPException(
-            status_code=response.status_code, 
-            detail=f"ONTAP Error: {response.text}"
-        )
+            data = response.json()
 
-    data = response.json()
+            print(json.dumps(data, indent=2))
+            return data.get("records", [])
+        
+        except httpx.HTTPError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error communicating with ONTAP API: {str(e)}"
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Unexpected error: {str(e)}"
+            )
 
-
-    return data.get("records", [])
 
 
 @router.post("/{conn_id}/svms")
