@@ -1,8 +1,8 @@
 """init schema
 
-Revision ID: 6e8dd323bdac
+Revision ID: 44e481956050
 Revises: 
-Create Date: 2025-11-27 12:46:46.621268
+Create Date: 2025-11-28 08:30:06.398053
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '6e8dd323bdac'
+revision: str = '44e481956050'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -46,7 +46,8 @@ def upgrade() -> None:
     sa.Column('role', sa.String(length=32), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('username')
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
     op.create_table('audits',
@@ -73,11 +74,11 @@ def upgrade() -> None:
     sa.Column('base_url', sa.String(length=255), nullable=False),
     sa.Column('enc_password', sa.Text(), nullable=False),
     sa.Column('scope', sa.String(length=16), nullable=False),
-    sa.Column('svm_name', sa.String(length=255), nullable=True),
     sa.Column('verify_tls', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['org_id'], ['organizations.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     op.create_index(op.f('ix_connections_org_id'), 'connections', ['org_id'], unique=False)
     op.create_table('reports',

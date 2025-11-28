@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from app.api import auth, orgs, connection
-from app.netapp import svm
+from app.netapp.svm import svm
 from dotenv import load_dotenv
 load_dotenv()
 

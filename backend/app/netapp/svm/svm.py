@@ -9,7 +9,7 @@ from app.api.auth_dep import require_role
 from app.api.connection_dep import get_auth_connection
 from app.schemas import SVMCreateRequest, SvmConnect
 from app.utility.netapp_client import get_netapp_client
-
+from app.netapp.svm.svm_dep import SvmQueryParams
 
 router = APIRouter(prefix="/svm", tags=["SVM"])
 
@@ -18,6 +18,7 @@ router = APIRouter(prefix="/svm", tags=["SVM"])
 @router.get("{conn_id}/svms")
 async def get_svms(
     conn_id: int,
+    filters: SvmQueryParams = Depends(),
     safe_connection: Connection = Depends(get_auth_connection),
     db: Session = Depends(get_db),
     current_user = Depends(require_role(["viewer", "admin"]))          
@@ -25,13 +26,18 @@ async def get_svms(
     
 
     async with get_netapp_client(safe_connection.id, db=db) as conn:
-        response = await conn.get("/api/svm/svms")
+        response = await conn.get("/api/svm/svms", params=filters.to_dict())
 
     if response.status_code != 200:
-        raise Exception(f"ONTAP Error {response.status_code}: {response.text}")
+        raise HTTPException(
+            status_code=response.status_code, 
+            detail=f"ONTAP Error: {response.text}"
+        )
 
-    print(response.json())
-    return response.json().get("records", [])
+    data = response.json()
+
+
+    return data.get("records", [])
 
 
 @router.post("/{conn_id}/svms")
