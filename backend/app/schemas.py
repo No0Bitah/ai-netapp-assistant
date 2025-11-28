@@ -67,12 +67,6 @@ class ConnectionCreate(BaseModel):
         max_length=35,
         description="The name of the Connection"
     )
-    svm_name: str = Field(
-        ...,
-        min_length=3,
-        max_length=35,
-        description="The name of the SVM"
-    )
     base_url: str = Field(
         ...,
         description="The management endpoint",
