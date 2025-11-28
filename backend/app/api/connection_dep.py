@@ -28,7 +28,6 @@ def create(conn_data: ConnectionCreate, db: Session, user: int):
         username = conn_data.username,
         enc_password = enc_netapp_password(conn_data.password),
         scope = conn_data.scope,
-        svm_name = conn_data.svm_name,
         verify_tls = conn_data.verify_tls
 
     )
@@ -38,7 +37,7 @@ def create(conn_data: ConnectionCreate, db: Session, user: int):
         db.flush()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409)
+        raise HTTPException(status_code=409, detail="Connection with this name already exists.")
     
     db.commit()
     return new_conn

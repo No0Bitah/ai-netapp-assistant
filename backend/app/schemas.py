@@ -70,7 +70,7 @@ class ConnectionCreate(BaseModel):
     base_url: str = Field(
         ...,
         description="The management endpoint",
-        examples=["https//:127.0.0.1"]
+        examples=["https://127.0.0.1"]
     )
     organization: str = Field(
         ...,
