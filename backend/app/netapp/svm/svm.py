@@ -1,19 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 import httpx
 import json
-
-from sqlalchemy.orm import Session
+from datetime import datetime
 from app.db import get_db
-from app.models.models import Connection
+from app.models.models import Connection, Job
 from app.api.auth_dep import require_role
 from app.api.connection_dep import get_auth_connection
 from app.schemas import SVMCreateRequest, SvmConnect
 from app.utility.netapp_client import get_netapp_client
 from app.netapp.svm.svm_dep import SvmQueryParams
+from app.workers.tasks import task_create_svm
+
 
 router = APIRouter(prefix="/svm", tags=["SVM"])
-
-
 
 @router.get("{conn_id}/svms")
 async def get_svms(
@@ -64,18 +64,34 @@ async def get_svms(
 async def create_svm(
     new_svm: SVMCreateRequest,
     safe_connection: Connection = Depends(get_auth_connection),
+    db: Session = Depends(get_db),
     current_user = Depends(require_role(["admin"]))
     ):
-    async with get_auth_connection(safe_connection) as conn:
-        payload = {
-            "name": new_svm.svm_name,
-            "snapshot_policy.name": new_svm.snapshot_policy
-        }
-        await create(
-            ontap_host=safe_connection.base_url,
-            username=safe_connection.username,
-            password=safe_connection.enc_password,
-            payload=payload
-        )   
+    
+    payload = {
+        "name": new_svm.svm_name,
+        "snapshot_policy": {"name": new_svm.snapshot_policy}
+    }
+    new_job = Job(
+        type="create_svm",
+        status="queued",
+        payload_json=payload,
+        created_at=datetime.utcnow()
+    )
+    # commit to db 
+    db.add(new_job)
+    db.commit()
+    db.refresh(new_job)
 
-    return {"message": "SVM created"}
+    print("Queuing SVM creation task...")
+    task_create_svm.delay(
+        job_id=new_job.id, 
+        svm_payload=payload,
+        conn_id=safe_connection.id,
+    )
+
+    return {
+            "message": "SVM creation queued.", 
+            "job_id": new_job.id,
+            "status_url": f"/jobs/{new_job.id}" # Helpful for frontend polling
+        }

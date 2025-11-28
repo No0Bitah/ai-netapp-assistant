@@ -109,12 +109,9 @@ class ConnectionCreate(BaseModel):
     verify_tls: bool = Field(default=True, description="...")
 
 class SVMCreateRequest(BaseModel):
-    connection_id: int
-    name: str
     svm_name: str
     snapshot_policy: str = "default"
-    
-    snapshot_policy: str = "default"
+
 
 class SvmConnect(BaseModel):
     connection_id: int
