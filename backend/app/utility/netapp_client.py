@@ -1,4 +1,5 @@
 import httpx, base64
+import asyncio
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from contextlib import asynccontextmanager
@@ -16,8 +17,11 @@ async def get_netapp_client(conn_id: int, db: Session):
             resp = await client.get(...)
     """
     # 1. Fetch Connection Details from DB
-    conn = db.query(Connection).filter(Connection.id == conn_id).first()
+    def fetch_connection_sync():
+        return db.query(Connection).filter(Connection.id == conn_id).first()
     
+    conn = await asyncio.to_thread(fetch_connection_sync)
+
     if not conn:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 

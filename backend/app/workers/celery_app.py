@@ -25,5 +25,7 @@ celery_app.conf.update(
     # Tracking: Allows the "Pizza Tracker" to see "STARTED" state, not just PENDING/SUCCESS
     task_track_started=True,
     task_time_limit=30 * 60, # Hard kill task if it runs over 30 mins
+
 )
+
 

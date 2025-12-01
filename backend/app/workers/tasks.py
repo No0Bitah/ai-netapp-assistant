@@ -13,16 +13,13 @@ from app.api.auth_dep import require_role
 
 
 async def _async_create_svm(conn_id: int, db: Session, svm_payload: dict):
-    print("Inside async SVM creation function")
-    print("SVM Payload:", svm_payload)
+
     async with get_netapp_client(conn_id, db) as client:
-            
-            # 2. Perform the API call
-            # print("Creating SVM with payload:", svm_payload)
-            response = await client.post("/api/svm/svms", json=svm_payload)
-            response.raise_for_status()
-            
-            return response.json()
+
+        response = await client.post("/api/svm/svms", json=svm_payload)
+
+        return response
+
 
 
 @celery_app.task(name="task_create_svm")
@@ -31,20 +28,19 @@ def task_create_svm(
                     svm_payload: dict,
                     conn_id: int,
                 ):
-    print("Starting Celery task for SVM creation...")
+
     db = SessionLocal()
     job = db.query(Job).filter(Job.id == job_id).first()
-    print("Job fetched from DB:", job)
     try:
         # Update Status: Started
         job.status = "running"
         job.started_at = datetime.utcnow()
         db.commit()
-        print("Starting SVM creation task...")
+        
         create_response = asyncio.run(
-             _async_create_svm(conn_id=conn_id, db=db, svm_payload=svm_payload)
-        )
-            
+                _async_create_svm(conn_id=conn_id, db=db, svm_payload=svm_payload)
+            )
+        print("SVM Creation Response:", create_response.status_code, create_response.text)
         # 5. Success!
         job.status = "success"
         job.finished_at = datetime.utcnow()
@@ -58,10 +54,13 @@ def task_create_svm(
         job.finished_at = datetime.utcnow()
         # It's good practice to store the error message
         # Since your Job model has 'payload_json', we can append the error there
+        print("SVM Creation Task Failed:", e)
         current_payload = dict(job.payload_json or {})
-        current_payload["error"] = str(e)
+        current_payload["error"] = [str(e)]
         job.payload_json = current_payload
         
     finally:
         db.commit()
         db.close() # Always close the session!
+    
+    # return {"job_id": job_id, "status": job.status}

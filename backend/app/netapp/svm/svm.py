@@ -7,17 +7,17 @@ from app.db import get_db
 from app.models.models import Connection, Job
 from app.api.auth_dep import require_role
 from app.api.connection_dep import get_auth_connection
-from app.schemas import SVMCreateRequest, SvmConnect
+from app.schemas import SVMCreateRequest
 from app.utility.netapp_client import get_netapp_client
 from app.netapp.svm.svm_dep import SvmQueryParams
 from app.workers.tasks import task_create_svm
+from app.netapp.svm.schema.svm_schema import SvmCreateRequest
 
 
 router = APIRouter(prefix="/svm", tags=["SVM"])
 
 @router.get("{conn_id}/svms")
 async def get_svms(
-    conn_id: int,
     filters: SvmQueryParams = Depends(),
     safe_connection: Connection = Depends(get_auth_connection),
     db: Session = Depends(get_db),
@@ -62,16 +62,15 @@ async def get_svms(
 
 @router.post("/{conn_id}/svms")
 async def create_svm(
-    new_svm: SVMCreateRequest,
+    new_svm: SvmCreateRequest,
     safe_connection: Connection = Depends(get_auth_connection),
     db: Session = Depends(get_db),
     current_user = Depends(require_role(["admin"]))
     ):
     
-    payload = {
-        "name": new_svm.svm_name,
-        "snapshot_policy": {"name": new_svm.snapshot_policy}
-    }
+    payload = new_svm.to_netapp_payload()
+    print("Preparing to queue SVM creation task with payload:", payload)
+
     new_job = Job(
         type="create_svm",
         status="queued",
