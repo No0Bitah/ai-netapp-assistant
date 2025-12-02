@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 import asyncio
+import json
 from datetime import datetime
 from app.workers.celery_app import celery_app
 from app.utility.netapp_client import get_netapp_client
@@ -31,9 +32,16 @@ def task_create_svm(
         create_response = asyncio.run(
                 _async_create_svm(conn_id=conn_id, db=db, svm_payload=svm_payload)
             )
-        print("SVM Creation Response:", create_response.status_code, create_response.text)
+        print("SVM Creation Response:", create_response)
+        print("payload used:", job.payload_json)
+        resp_data =json.loads(json.dumps(create_response))
         # 5. Success!
-        job.status = "success"
+        job.status = resp_data.get("status"," ") 
+        if resp_data.get("message") != "SVM Created":
+            current_payload = dict(job.payload_json or {})
+            current_payload["error"] = resp_data.get("message", "Unknown error")
+            job.payload_json = current_payload
+
         job.finished_at = datetime.utcnow()
         # Optionally save the result in the payload or a new field
         # job.result = response.json() 
@@ -54,4 +62,3 @@ def task_create_svm(
         db.commit()
         db.close() # Always close the session!
     
-    return {"job_id": job_id, "status": job.status}

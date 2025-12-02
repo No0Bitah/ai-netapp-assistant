@@ -118,13 +118,35 @@ class SvmCreateRequest(BaseModel):
             payload["language"] = self.language
         if "subtype" in set_fields:
             payload["subtype"]= self.subtype
+            
         if "ipspace" in set_fields and self.ipspace and self.ipspace.name:
-            payload["ipspace"] = {"name": self.ipspace.name}
+            ipspace_fields = self.ipspace.model_fields_set
+            ipspace_data = {}
+
+            if "uuid" in ipspace_fields:
+                ipspace_data["uuid"] = self.ipspace.uuid
+                # Optional: If the user explicitly provided BOTH uuid and name, send both.
+                # But we skip the 'Default' name if it was auto-generated.
+                if "name" in ipspace_fields:
+                    ipspace_data["name"] = self.ipspace.name
+            elif "name" in ipspace_fields:
+                # User provided a custom name (e.g., "ipspace_A") but no UUID
+                ipspace_data["name"] = self.ipspace.name
+            
+            else:
+                # Case: User sent "ipspace": {} 
+                # They want the ipspace config, but didn't type anything.
+                # We send the default value "Default".
+                ipspace_data["name"] = self.ipspace.name
+
+            payload["ipspace"] = ipspace_data
+
         if "snapshot_policy" in set_fields and self.snapshot_policy:
                 payload["snapshot_policy"] = {"name": self.snapshot_policy}
-        # "ipspace": {"name": self.ipspace.name} if self.ipspace and self.ipspace.name else None,
+        
         if "anti_ransomware_default_volume_state" in set_fields:
             payload["anti_ransomware_default_volume_state"] = self.anti_ransomware_default_volume_state
+
         # Add generic nested objects if they exist
         if self.dns:
             payload["dns"] = self.dns.model_dump()

@@ -83,6 +83,8 @@ async def create_svm(
     db.refresh(new_job)
 
     print("Queuing SVM creation task...")
+    print("Job ID:", new_job.id)
+    print("Job payload:", payload)
     task_create_svm.delay(
         job_id=new_job.id, 
         svm_payload=payload,
