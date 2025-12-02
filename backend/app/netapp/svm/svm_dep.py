@@ -1,4 +1,8 @@
 from fastapi import Query, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.utility.netapp_client import get_netapp_client
+import asyncio
+
 from typing import Optional, List
 
 class SvmQueryParams:
@@ -162,3 +166,45 @@ class SvmQueryParams:
 
     def to_dict(self):
         return self.api_params
+    
+async def _poll_netapp_job(conn_id: int, db: Session, job_link: str):
+    async with get_netapp_client(conn_id, db) as client:
+        while True:
+            job_resp = await client.get(job_link)
+            if job_resp.status_code != 200:
+                raise HTTPException(
+                    status_code=job_resp.status_code,
+                    detail=f"Failed to poll NetApp job: {job_resp.text}"
+                )
+            job_data = job_resp.json()
+            state = job_data.get("state") # e.g., "running", "success", "failure"
+            
+            print(f"NetApp Job State: {state}")
+
+            if state == "success":
+                return True
+            elif state == "failure":
+                error_message = job_data.get("message", "Unknown NetApp Error")
+                raise Exception(f"NetApp Background Job Failed: {error_message}")
+            
+            # 2. Wait before polling again to avoid spamming the API
+            await asyncio.sleep(5)
+
+
+async def _async_create_svm(conn_id: int, db: Session, svm_payload: dict):
+
+    async with get_netapp_client(conn_id, db) as client:
+        print("Sending SVM creation payload to NetApp:", svm_payload)
+        response = await client.post("/api/svm/svms", json=svm_payload)
+
+        if response.status_code in [200, 201, 202]:
+            response_json = response.json()
+            # NetApp usually returns a job object with a link
+            job_link = response_json.get("job", {}).get("_links", {}).get("self", {}).get("href")
+            if job_link:
+                print(f"SVM creation queued on NetApp. Polling Job: {job_link}")
+                # Poll until finished
+                await _poll_netapp_job(conn_id, db, job_link)
+        else:
+            print("202 received but no job link found. Assuming success.")
+        return response

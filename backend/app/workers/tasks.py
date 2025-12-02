@@ -9,16 +9,7 @@ from app.db import get_db, SessionLocal
 from app.models.models import Connection, Job
 from app.api.connection_dep import get_auth_connection
 from app.api.auth_dep import require_role
-
-
-
-async def _async_create_svm(conn_id: int, db: Session, svm_payload: dict):
-
-    async with get_netapp_client(conn_id, db) as client:
-
-        response = await client.post("/api/svm/svms", json=svm_payload)
-
-        return response
+from app.netapp.svm.svm_dep import _async_create_svm
 
 
 
@@ -63,4 +54,4 @@ def task_create_svm(
         db.commit()
         db.close() # Always close the session!
     
-    # return {"job_id": job_id, "status": job.status}
+    return {"job_id": job_id, "status": job.status}

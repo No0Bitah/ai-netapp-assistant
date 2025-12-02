@@ -67,7 +67,7 @@ class SvmCreateRequest(BaseModel):
     subtype: Optional[str] = "default"
     snapshot_policy: Optional[str] = Field(None, alias="snapshot_policy.name")
     anti_ransomware_default_volume_state: Optional[str] = "disabled"
-    # qos_adaptive_policy_group_template: Optional[str] = Field(None, alias="qos.adaptive_policy_group_template")
+    qos_adaptive_policy_group_template: Optional[str] = None
 
     # Complex Nested Objects
     dns: Optional[SvmDns] = None
@@ -109,16 +109,22 @@ class SvmCreateRequest(BaseModel):
         structure the NetApp API expects.
         """
         # Start with a basic dump
+        set_fields = self.model_fields_set
         payload = {
             "name": self.name,
-            "language": self.language,
-            "subtype": self.subtype,
-            "ipspace": {"name": self.ipspace.name} if self.ipspace and self.ipspace.name else None,
-            "snapshot_policy": {"name": self.snapshot_policy} if self.snapshot_policy else None,
-            "anti_ransomware_default_volume_state": self.anti_ransomware_default_volume_state
 
         }
-
+        if "language" in set_fields:
+            payload["language"] = self.language
+        if "subtype" in set_fields:
+            payload["subtype"]= self.subtype
+        if "ipspace" in set_fields and self.ipspace and self.ipspace.name:
+            payload["ipspace"] = {"name": self.ipspace.name}
+        if "snapshot_policy" in set_fields and self.snapshot_policy:
+                payload["snapshot_policy"] = {"name": self.snapshot_policy}
+        # "ipspace": {"name": self.ipspace.name} if self.ipspace and self.ipspace.name else None,
+        if "anti_ransomware_default_volume_state" in set_fields:
+            payload["anti_ransomware_default_volume_state"] = self.anti_ransomware_default_volume_state
         # Add generic nested objects if they exist
         if self.dns:
             payload["dns"] = self.dns.model_dump()
