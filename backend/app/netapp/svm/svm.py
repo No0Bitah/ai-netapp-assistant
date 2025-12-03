@@ -9,9 +9,9 @@ from app.api.auth_dep import require_role
 from app.api.connection_dep import get_auth_connection
 from app.schemas import SVMCreateRequest
 from app.utility.netapp_client import get_netapp_client
-from app.netapp.svm.svm_dep import SvmQueryParams
+# from app.netapp.svm.svm_dep import SvmQueryParams
 from app.workers.tasks import task_create_svm
-from app.netapp.svm.schema.svm_schema import SvmCreateRequest
+from app.netapp.svm.schema.svm_schema import SvmCreateRequest, SvmQueryParams
 
 
 router = APIRouter(prefix="/svm", tags=["SVM"])
@@ -19,6 +19,7 @@ router = APIRouter(prefix="/svm", tags=["SVM"])
 @router.get("{conn_id}/svms")
 async def get_svms(
     filters: SvmQueryParams = Depends(),
+    next_link: str = None,
     safe_connection: Connection = Depends(get_auth_connection),
     db: Session = Depends(get_db),
     current_user = Depends(require_role(["viewer", "admin"]))          
@@ -27,9 +28,17 @@ async def get_svms(
 
     async with get_netapp_client(safe_connection.id, db=db) as conn:
         try:
-            query_params = filters.to_dict()
-            query_params["fields"] = "*"  # Fetch all fields
-            response = await conn.get("/api/svm/svms", params=query_params)
+            
+            if next_link:
+                endpoint = next_link
+                query_params = None
+            else:
+                endpoint = "/api/svm/svms"
+                query_params = filters.to_api_params()
+                query_params["fields"] = "*"
+
+            response = await conn.get(endpoint, params=query_params)
+            
             if response.status_code != 200:
                 try:
                     error_detail = response.json().get('error', {}).get('message', 'Unknown error') 
@@ -45,7 +54,11 @@ async def get_svms(
             data = response.json()
 
             print(json.dumps(data, indent=2))
-            return data.get("records", [])
+            return {
+            "records": data.get("records", []),
+            "next_link": data.get("_links", {}).get("next", {}).get("href"),
+            "total_records": data.get("num_records")
+            }
         
         except httpx.HTTPError as e:
             raise HTTPException(

@@ -5,7 +5,54 @@ from typing import Optional, List, Literal
 
 app = FastAPI()
 
+class SvmQueryParams(BaseModel):
+    # --- Basic Filters ---
+    name: Optional[str] = Field(None, description="Filter by name")
+    uuid: Optional[str] = Field(None, description="Filter by uuid")
+    state: Optional[str] = Field(None, description="Filter by state")
+    subtype: Optional[str] = Field(None, description="Filter by subtype")
+    comment: Optional[str] = Field(None, description="Filter by comment")
+    language: Optional[str] = Field(None, description="Filter by language")
 
+    # --- NIS ---
+    # serialization_alias is the MAGIC key. 
+    # It tells Pydantic: "When converting to dict/json, use this name."
+    nis_enabled: Optional[bool] = Field(None, serialization_alias="nis.enabled")
+    nis_servers: Optional[str] = Field(None, serialization_alias="nis.servers")
+    nis_domain: Optional[str] = Field(None, serialization_alias="nis.domain")
+
+    # --- DNS ---
+    dns_servers: Optional[str] = Field(None, serialization_alias="dns.servers")
+    dns_domains: Optional[str] = Field(None, serialization_alias="dns.domains")
+
+    # --- IPSpace ---
+    ipspace_name: Optional[str] = Field(None, serialization_alias="ipspace.name")
+    ipspace_uuid: Optional[str] = Field(None, serialization_alias="ipspace.uuid")
+
+    # --- Protocols ---
+    nfs_allowed: Optional[bool] = Field(None, serialization_alias="nfs.allowed")
+    cifs_allowed: Optional[bool] = Field(None, serialization_alias="cifs.allowed")
+    iscsi_allowed: Optional[bool] = Field(None, serialization_alias="iscsi.allowed")
+    nvme_allowed: Optional[bool] = Field(None, serialization_alias="nvme.allowed")
+    fcp_allowed: Optional[bool] = Field(None, serialization_alias="fcp.allowed")
+
+    # --- Storage ---
+    storage_allocated: Optional[int] = Field(None, serialization_alias="storage.allocated")
+    storage_available: Optional[int] = Field(None, serialization_alias="storage.available")
+    storage_used_pct: Optional[int] = Field(None, serialization_alias="storage.used_percentage")
+
+    # --- API Controls ---
+    fields: Optional[List[str]] = Field(None)
+    max_records: Optional[int] = Field(None)
+    order_by: Optional[List[str]] = Field(None)
+
+    # This replaces your custom to_dict() method
+    def to_api_params(self):
+        # by_alias=True tells Pydantic to use the 'serialization_alias' names
+        # exclude_none=True removes keys with None values (cleaning the output)
+        return self.model_dump(by_alias=True, exclude_none=True)
+    
+    
 class SvmIpSpace(BaseModel):
     name: Optional[str] = Field("Default", description="IPSpace Name")
     uuid: Optional[str] = None
